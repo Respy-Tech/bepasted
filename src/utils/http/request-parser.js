@@ -22,7 +22,7 @@ export async function safeParseJSON(req, options = {}) {
 
   try {
     // Check content-length and try to parse JSON
-    await validateContentLength(req, limits.requestSize);
+    validateContentLength(req, limits.requestSize);
     return await parseRequestJSON(req);
   } catch (error) {
     return handleParseError(error);
@@ -35,7 +35,7 @@ export async function safeParseJSON(req, options = {}) {
  * @param {number} maxSize - Maximum allowed size in bytes
  * @throws {Error} If content length exceeds maximum size
  */
-async function validateContentLength(req, maxSize) {
+function validateContentLength(req, maxSize) {
   const contentLength = parseInt(req.header("content-length") || "0");
   if (contentLength > maxSize) {
     throw createError("Request payload too large", ErrorTypes.CONTENT_SIZE, {
@@ -82,7 +82,7 @@ function isBodyAlreadyReadError(error) {
  * @returns {Object} Parsed JSON
  * @throws {Error} If recovery fails
  */
-async function handleBodyAlreadyRead(req, originalError) {
+function handleBodyAlreadyRead(req, originalError) {
   logger.warn("Request body already consumed, attempting fallback", {
     error: originalError.message,
     path: req.path,
