@@ -655,6 +655,7 @@ class PasteEditor {
     document.addEventListener("keydown", handleKeyDownFunc);
     document.addEventListener("mousedown", handleOutsideClickFunc);
     saveBtn.onclick = handleSave;
+    cancelBtn.onclick = closePopup;
   }
 
   rebuildTabs() {
