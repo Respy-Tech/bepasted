@@ -67,7 +67,7 @@ class PasteEditor {
       console.error("Error popup not initialized:", message);
 
       // Create and show a temporary error display instead of using alert()
-      this.showFallbackError(message, title);
+      PasteEditor.showFallbackError(message, title);
       return;
     }
 
@@ -78,7 +78,7 @@ class PasteEditor {
   }
 
   // Show a temporary fallback error when the main error popup isn't available
-  showFallbackError(message, title = "Error") {
+  static showFallbackError(message, title = "Error") {
     // Remove any existing fallback errors
     const existingFallback = document.getElementById("fallback-error");
     if (existingFallback) {
@@ -467,7 +467,7 @@ class PasteEditor {
 
     // Calculate true file size using Blob (accurate byte count for UTF-8 encoding)
     const trueBytes = new Blob([text]).size;
-    const formattedSize = this.formatFileSize(trueBytes);
+    const formattedSize = PasteEditor.formatFileSize(trueBytes);
 
     // Calculate UTF-8/ASCII ratio to show encoding efficiency
     const asciiCount = (text.match(/[\x20-\x7F]/gu) || []).length;
@@ -481,20 +481,20 @@ class PasteEditor {
       const efficiencyTitle = `${nonAsciiCount} non-ASCII characters detected that use multiple bytes in UTF-8 encoding`;
       encodingEfficiency = ` | <span title="${efficiencyTitle}" class="${
         encodingRatio > 1.5 ? "encoding-high" : ""
-      }">${this.formatNumber(asciiCount)} ASCII + ${this.formatNumber(
-        nonAsciiCount
-      )} multi-byte</span>`;
+      }">${PasteEditor.formatNumber(
+        asciiCount
+      )} ASCII + ${PasteEditor.formatNumber(nonAsciiCount)} multi-byte</span>`;
     }
 
     // Format the statistics display
     this.wordCounter.innerHTML = `
-            <span title="Characters including spaces">Chars: ${this.formatNumber(
+            <span title="Characters including spaces">Chars: ${PasteEditor.formatNumber(
               charCount
             )}</span> | 
-            <span title="Word count">Words: ${this.formatNumber(
+            <span title="Word count">Words: ${PasteEditor.formatNumber(
               wordCount
             )}</span> | 
-            <span title="Line count">Lines: ${this.formatNumber(
+            <span title="Line count">Lines: ${PasteEditor.formatNumber(
               lineCount
             )}</span> | 
             <span title="True file size (UTF-8 encoded)">Size: ${formattedSize}</span>${encodingEfficiency}
@@ -506,7 +506,7 @@ class PasteEditor {
    * @param {number} num - The number to format
    * @returns {string} Formatted number
    */
-  formatNumber(num) {
+  static formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
@@ -515,7 +515,7 @@ class PasteEditor {
    * @param {number} bytes - Size in bytes
    * @returns {string} Formatted size
    */
-  formatFileSize(bytes) {
+  static formatFileSize(bytes) {
     if (bytes === 0) return "0 Bytes";
 
     const units = ["Bytes", "KB", "MB", "GB"];
