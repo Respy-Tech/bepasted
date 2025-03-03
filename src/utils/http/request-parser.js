@@ -99,7 +99,7 @@ function handleBodyAlreadyRead(req, originalError) {
         error: parseError.message,
         bodySnippet:
           cachedBody.length > 50
-            ? cachedBody.substring(0, 50) + "..."
+            ? `${cachedBody.substring(0, 50)}...`
             : cachedBody,
       });
       throw createError(
@@ -180,7 +180,7 @@ function handleParseError(error) {
 
   // Wrap other errors
   throw createError(
-    "Error parsing request body: " + error.message,
+    `Error parsing request body: ${error.message}`,
     ErrorTypes.BAD_REQUEST,
     { originalError: error }
   );

@@ -174,7 +174,7 @@ class PasteEditor {
                     "Configuration Error"
                   );
                 } else {
-                  this.showError("Security verification error: " + error);
+                  this.showError(`Security verification error: ${error}`);
                 }
                 this.turnstileToken = null;
               },
@@ -191,7 +191,7 @@ class PasteEditor {
     } catch (error) {
       console.error("Turnstile initialization error:", error);
       this.showError(
-        "Error initializing security verification: " + error.message
+        `Error initializing security verification: ${error.message}`
       );
     }
   }
@@ -707,7 +707,7 @@ class PasteEditor {
     // Use the current order from the Map
     Array.from(this.tabs.entries()).forEach(([id, data]) => {
       const tabButton = document.createElement("button");
-      tabButton.className = "tab" + (id === this.activeTab ? " active" : "");
+      tabButton.className = `tab${id === this.activeTab ? " active" : ""}`;
       tabButton.setAttribute("data-tab", id);
 
       const tabName = document.createElement("span");
