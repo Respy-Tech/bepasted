@@ -82,11 +82,12 @@ class ContentScanner {
     };
 
     // Check against each pattern category
-    this._checkPatterns(content, "malware", results, 3);
-    this._checkPatterns(content, "phishing", results, 2);
-    this._checkPatterns(content, "dataExfiltration", results, 4);
-    this._checkPatterns(content, "sensitiveData", results, 1);
-
+    // Sanitize content once for all checks
+    const sanitizedContentString = purify.sanitize(content);
+    this._checkPatterns(sanitizedContentString, "malware", results, 3);
+    this._checkPatterns(sanitizedContentString, "phishing", results, 2);
+    this._checkPatterns(sanitizedContentString, "dataExfiltration", results, 4);
+    this._checkPatterns(sanitizedContentString, "sensitiveData", results, 1);
     // Special case: Analyze script density
     const sanitizedContent = purify.sanitize(content, { RETURN_DOM: true });
     const scriptTags = sanitizedContent.getElementsByTagName('script').length;
