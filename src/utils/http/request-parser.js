@@ -107,8 +107,8 @@ export async function safeParseJSON(req, options = {}) {
           error: error.message,
           path: req.path,
           // Log info about what properties are available for debugging
-          hasRaw: !!req.raw,
-          hasContext: !!(req._c || (req.raw?._c)),
+          hasRaw: Boolean(req.raw),
+          hasContext: Boolean(req._c || (req.raw?._c)),
           requestProperties: Object.keys(req),
           rawRequestProperties: req.raw ? Object.keys(req.raw) : []
         });
