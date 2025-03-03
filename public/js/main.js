@@ -65,7 +65,9 @@ class PasteEditor {
   showError(message, title = "Error") {
     if (!this.errorPopup || !this.errorPopupMessage) {
       console.error("Error popup not initialized:", message);
-      alert(message); // Fallback to alert if error popup is not available
+
+      // Create and show a temporary error display instead of using alert()
+      this.showFallbackError(message, title);
       return;
     }
 
@@ -73,6 +75,48 @@ class PasteEditor {
     this.errorPopup.querySelector(".error-popup-title").textContent = title;
     this.errorPopup.classList.add("show");
     this.errorPopupOverlay.classList.add("show");
+  }
+
+  // Show a temporary fallback error when the main error popup isn't available
+  showFallbackError(message, title = "Error") {
+    // Remove any existing fallback errors
+    const existingFallback = document.getElementById("fallback-error");
+    if (existingFallback) {
+      existingFallback.remove();
+    }
+
+    // Create a simple error element
+    const errorElement = document.createElement("div");
+    errorElement.id = "fallback-error";
+    errorElement.style.cssText =
+      "position:fixed;top:10px;right:10px;background:#f44336;color:white;padding:12px;border-radius:4px;z-index:9999;box-shadow:0 2px 10px rgba(0,0,0,0.2);max-width:80%;";
+
+    const titleElement = document.createElement("div");
+    titleElement.style.cssText = "font-weight:bold;margin-bottom:5px;";
+    titleElement.textContent = title;
+
+    const messageElement = document.createElement("div");
+    messageElement.textContent = message;
+
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "×";
+    closeButton.style.cssText =
+      "position:absolute;top:5px;right:5px;background:transparent;border:none;color:white;font-size:18px;cursor:pointer;";
+    closeButton.onclick = () => errorElement.remove();
+
+    errorElement.appendChild(titleElement);
+    errorElement.appendChild(messageElement);
+    errorElement.appendChild(closeButton);
+
+    // Add to document body
+    document.body.appendChild(errorElement);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (errorElement.parentNode) {
+        errorElement.remove();
+      }
+    }, 5000);
   }
 
   // Hide error popup
