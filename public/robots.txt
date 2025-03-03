@@ -1,0 +1,27 @@
+# robots.txt for BePasted.com
+# This file tells search engines which parts of the site they can crawl
+
+User-agent: *
+# Allow crawling of main pages
+Allow: /
+Allow: /credits
+Allow: /privacy-policy
+Allow: /terms_of_service
+Allow: /assets/
+Allow: /css/
+Allow: /js/
+
+# Disallow crawling of API endpoints and raw paste content
+Disallow: /api/
+Disallow: /raw/
+# Disallow password-protected pastes
+Disallow: /*?password=*
+
+# Disallow rate limit error page
+Disallow: /rate-limit-error
+
+# Crawl delay to prevent server overload
+Crawl-delay: 1
+
+# Sitemap location (if you implement one in the future)
+# Sitemap: https://bepasted.com/sitemap.xml 

@@ -1,0 +1,830 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BePasted API",
+    "description": "API for BePasted, a free, no-login paste service prioritizing privacy, simplicity, and security.\n\nThis API allows programmatic access to create and retrieve pastes with various privacy features including:\n- Password protection\n- Time-based expiry\n- View-based expiry\n- Raw content access control\n\nPlease note that rate limiting is in effect: 10 paste creations per minute per IP.\n",
+    "version": "2.0.1",
+    "contact": {
+      "name": "BePasted",
+      "url": "https://bepasted.com"
+    },
+    "license": {
+      "name": "ISC",
+      "url": "https://opensource.org/licenses/ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Paste",
+      "description": "Operations related to pastes"
+    },
+    {
+      "name": "Authentication",
+      "description": "Operations related to private paste authentication"
+    }
+  ],
+  "paths": {
+    "/paste": {
+      "post": {
+        "tags": [
+          "Paste"
+        ],
+        "summary": "Create a new paste",
+        "description": "Creates a new paste with options for privacy, expiration, and more.\n\n**Rate Limiting**: 10 paste creations per minute per IP\n\n**Security**: Requires Cloudflare Turnstile token for verification\n",
+        "operationId": "createPaste",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePasteRequest"
+              },
+              "examples": {
+                "singleTabPublic": {
+                  "summary": "Simple public paste",
+                  "value": {
+                    "tabs": [
+                      {
+                        "id": 0,
+                        "name": "main.js",
+                        "content": "console.log('Hello, world!');"
+                      }
+                    ],
+                    "isPrivate": false,
+                    "allowRaw": true,
+                    "token": "1x00000000000000000000AA"
+                  }
+                },
+                "multiTabPrivate": {
+                  "summary": "Multi-tab private paste with expiry",
+                  "value": {
+                    "tabs": [
+                      {
+                        "id": 0,
+                        "name": "index.html",
+                        "content": "<html><body><h1>Hello world</h1></body></html>"
+                      },
+                      {
+                        "id": 1,
+                        "name": "style.css",
+                        "content": "body { font-family: Arial, sans-serif; }"
+                      }
+                    ],
+                    "isPrivate": true,
+                    "password": "secret123",
+                    "expiry": {
+                      "value": 7,
+                      "unit": "days"
+                    },
+                    "token": "1x00000000000000000000AA"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paste created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique ID of the created paste",
+                      "example": "a1b2c3d4"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "validation": {
+                    "value": {
+                      "error": "At least one tab with content is required"
+                    }
+                  },
+                  "size": {
+                    "value": {
+                      "error": "Paste size exceeds limit",
+                      "details": {
+                        "totalSize": 2200000,
+                        "maxSize": 2097152,
+                        "maxSizeFormatted": "2MB"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request entity too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Request entity too large",
+                  "maxSize": "25MB"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                },
+                "example": {
+                  "error": "Rate limit exceeded. Please try again later.",
+                  "timeLeft": 42000
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "turnstileAuth": []
+          }
+        ]
+      }
+    },
+    "/api/paste/{id}": {
+      "get": {
+        "tags": [
+          "Paste"
+        ],
+        "summary": "Get a paste by ID",
+        "description": "Retrieves a paste by its unique ID. If the paste is private, a password must be provided.\n\nFor private pastes, you should first verify the password using the /paste/{id}/verify-password endpoint.\n",
+        "operationId": "getPaste",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique ID of the paste",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "description": "Password for private pastes",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paste retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paste"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Password required or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Password required"
+                    },
+                    "isPrivate": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "attemptsRemaining": {
+                      "type": "integer",
+                      "example": 5
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paste not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Paste not found"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Paste has expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Paste has expired"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many password attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                },
+                "example": {
+                  "error": "Too many password attempts",
+                  "timeLeft": 55000,
+                  "attemptsRemaining": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/paste/{id}/raw": {
+      "get": {
+        "tags": [
+          "Paste"
+        ],
+        "summary": "Get raw paste content",
+        "description": "Retrieves the raw content of a paste. This endpoint is only available for:\n- Public pastes\n- Single-tab pastes\n- Pastes with allowRaw set to true\n",
+        "operationId": "getRawPaste",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique ID of the paste",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raw paste content",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "console.log('Hello, world!');"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Raw access not allowed",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Raw access not allowed for this paste"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paste not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Paste not found"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Paste has expired",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Paste has expired"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/paste/{id}/verify-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Verify password for a private paste",
+        "description": "Verifies if the provided password is correct for a private paste.\n**Rate Limiting**: 6 password attempts per minute per paste per IP\n\nThis endpoint should be used before attempting to access a private paste.\n",
+        "operationId": "verifyPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique ID of the paste",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "description": "Password for the private paste"
+                  }
+                }
+              },
+              "example": {
+                "password": "secret123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the password is correct",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "missingPassword": {
+                    "value": {
+                      "error": "Password is required"
+                    }
+                  },
+                  "notPrivate": {
+                    "value": {
+                      "error": "Paste is not private"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid password"
+                    },
+                    "attemptsRemaining": {
+                      "type": "integer",
+                      "example": 5
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paste not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Paste not found"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Paste has expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Paste has expired"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many password attempts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                },
+                "example": {
+                  "error": "Too many password attempts",
+                  "timeLeft": 55000,
+                  "attemptsRemaining": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/paste/{id}/report": {
+      "post": {
+        "tags": [
+          "Paste"
+        ],
+        "summary": "Report a paste",
+        "description": "Reports a paste for review by administrators.\n\n**Rate Limiting**: 3 reports per minute per IP\n",
+        "operationId": "reportPaste",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The unique ID of the paste",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "description": "Reason for reporting the paste",
+                    "example": "Contains malicious code"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paste reported successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Paste reported successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Reason is required"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Paste not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Paste not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rate-limit-status": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Check rate limit status",
+        "description": "Checks the current rate limit status for the client.\nRedirects to home page if not rate-limited.\n",
+        "operationId": "getRateLimitStatus",
+        "responses": {
+          "200": {
+            "description": "Rate limit status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "timeLeft": {
+                      "type": "integer",
+                      "description": "Time left in milliseconds until rate limit resets",
+                      "example": 35000
+                    },
+                    "suspicious": {
+                      "type": "boolean",
+                      "description": "Whether this client is flagged as suspicious",
+                      "example": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Not rate limited, redirects to home page"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Tab": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "content"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Tab index",
+            "example": 0
+          },
+          "name": {
+            "type": "string",
+            "description": "Tab name (max 50 characters)",
+            "example": "main.js"
+          },
+          "content": {
+            "type": "string",
+            "description": "Tab content (max 2MB per tab)",
+            "example": "console.log('Hello, world!');"
+          }
+        }
+      },
+      "CreatePasteRequest": {
+        "type": "object",
+        "required": [
+          "tabs",
+          "token"
+        ],
+        "properties": {
+          "tabs": {
+            "type": "array",
+            "description": "Array of tabs (max 10)",
+            "items": {
+              "$ref": "#/components/schemas/Tab"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether the paste is private",
+            "default": false
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for private pastes (required if isPrivate is true)",
+            "minLength": 1,
+            "maxLength": 32
+          },
+          "allowRaw": {
+            "type": "boolean",
+            "description": "Whether raw access is allowed. Only available for public, single-tab pastes.",
+            "default": false
+          },
+          "expiry": {
+            "type": "object",
+            "description": "Expiry settings",
+            "properties": {
+              "value": {
+                "type": "integer",
+                "description": "Expiry value",
+                "minimum": 5,
+                "example": 7
+              },
+              "unit": {
+                "type": "string",
+                "description": "Expiry unit",
+                "enum": [
+                  "seconds",
+                  "minutes",
+                  "hours",
+                  "days"
+                ],
+                "example": "days"
+              }
+            }
+          },
+          "burnCount": {
+            "type": "integer",
+            "description": "Number of views after which paste expires",
+            "minimum": 1,
+            "maximum": 10000000000,
+            "example": 10
+          },
+          "token": {
+            "type": "string",
+            "description": "Cloudflare Turnstile token for verification (required for bot protection)",
+            "example": "1x00000000000000000000AA"
+          }
+        }
+      },
+      "Paste": {
+        "type": "object",
+        "properties": {
+          "tabs": {
+            "type": "array",
+            "description": "Array of tabs",
+            "items": {
+              "$ref": "#/components/schemas/Tab"
+            }
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether the paste is private",
+            "example": false
+          },
+          "allowRaw": {
+            "type": "boolean",
+            "description": "Whether raw access is allowed",
+            "example": true
+          },
+          "expiry": {
+            "type": "object",
+            "description": "Expiry settings",
+            "properties": {
+              "value": {
+                "type": "integer",
+                "description": "Expiry value",
+                "example": 7
+              },
+              "unit": {
+                "type": "string",
+                "description": "Expiry unit",
+                "enum": [
+                  "seconds",
+                  "minutes",
+                  "hours",
+                  "days"
+                ],
+                "example": "days"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Expiry date in ISO format",
+                "example": "2023-12-31T23:59:59Z"
+              }
+            }
+          },
+          "burnCount": {
+            "type": "integer",
+            "description": "Number of views after which paste expires",
+            "example": 10
+          },
+          "currentViews": {
+            "type": "integer",
+            "description": "Current number of views",
+            "example": 3
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation date in ISO format",
+            "example": "2023-12-24T12:00:00Z"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Paste not found"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details",
+            "additionalProperties": true
+          }
+        }
+      },
+      "RateLimitError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Rate limit exceeded. Please try again later."
+          },
+          "timeLeft": {
+            "type": "integer",
+            "description": "Time left in milliseconds until rate limit resets",
+            "example": 35000
+          },
+          "attemptsRemaining": {
+            "type": "integer",
+            "description": "Remaining attempts (for password verification)",
+            "example": 0
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "turnstileAuth": {
+        "type": "apiKey",
+        "name": "token",
+        "in": "header",
+        "description": "Cloudflare Turnstile token for bot protection"
+      }
+    }
+  }
+}

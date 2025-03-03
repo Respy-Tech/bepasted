@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Another text sharing platform alternative. Share code snippets, notes, and text with anyone instantly for free. No signup required." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="code sharing, text sharing, paste service, code snippets, text snippets, developer tools, pastebin alternative, secure paste, privacy-focused paste, no-login paste, code collaboration, programming snippets, text storage, temporary text hosting, free paste service, anonymous paste, code hosting, syntax highlighting, multi-tab paste, password-protected paste" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f5132" />
+    <meta name="color-scheme" content="light dark" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BePasted" />
+    <meta property="og:url" content="http://localhost:3000" />
+    <meta property="og:image" content="/assets/banner.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:title" content="BePasted - Share Code and Text Snippets Instantly For Free" />
+    <meta property="og:description" content="Another text sharing platform alternative. Share code snippets, notes, and text with anyone instantly for free. No signup required." />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="http://localhost:3000" />
+    <meta property="twitter:image" content="/assets/banner.png" />
+    <meta property="twitter:title" content="BePasted - Share Code and Text Snippets Instantly For Free" />
+    <meta property="twitter:description" content="Another text sharing platform alternative. Share code snippets, notes, and text with anyone instantly for free. No signup required." />
+    
+    <link rel="canonical" href="http://localhost:3000">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/be-logo-256x256.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/be-logo-6xs64.webp" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/be-logo-64x64.webp" />
+    <title>BePasted - Share Code and Text Snippets Instantly For Free</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/syntax-highlight.js" defer></script>
+    <style>
+        .tab-name {
+            display: inline-block;
+            min-width: 50px;
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+        .tab-name.editing {
+            background: white;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+
+        .tab {
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+
+        .tab.dragging {
+            z-index: 1000;
+            cursor: grabbing !important;
+        }
+
+        .tab.drop-target {
+            transform: translateX(2px);
+            position: relative;
+        }
+
+        .tab.drop-target::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
+            animation: pulse 1s infinite;
+        }
+
+        .tab-ghost {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1001;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        #raw-access-card.disabled .option-content {
+            position: relative;
+            opacity: 0.8;
+        }
+
+        #raw-access-card.disabled .option-note {
+            display: none;
+        }
+
+        #raw-access-card .warning-message {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background-color: rgba(50, 50, 50, 0.85);
+            border-radius: 4px;
+            font-size: 13px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            border-left: 3px solid rgba(255, 165, 0, 0.7);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        }
+
+        #raw-access-card.disabled .warning-message {
+            display: flex;
+            align-items: center;
+            max-height: 60px;
+            opacity: 1;
+            animation: slideDown 0.3s ease-out forwards;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .warning-icon {
+            display: inline-flex;
+            margin-right: 8px;
+            color: #ffa500;
+            animation: warningPulse 2s infinite;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+        }
+
+        @keyframes warningPulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        @keyframes slideDown {
+            from { max-height: 0; opacity: 0; padding: 0 12px; }
+            to { max-height: 60px; opacity: 1; padding: 8px 12px; }
+        }
+
+        .error-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 90%;
+            color: #fff;
+        }
+
+        .error-popup.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .error-popup-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .error-popup-icon {
+            color: #ff4444;
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .error-popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .error-popup-message {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .error-popup-button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .error-popup-button:hover {
+            background: #555;
+        }
+
+        .error-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .error-popup-overlay.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .credits-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .copyright-text {
+            color: #666;
+            font-size: 0.9em;
+            margin: 0;
+        }
+        .copyright-text .company-link {
+            text-decoration: underline;
+            text-decoration-style: dashed;
+            color: inherit;
+            transition: text-shadow 0.3s ease;
+        }
+        
+        .copyright-text .company-link:hover {
+            text-shadow: 0 0 8px rgba(102, 102, 102, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="logo-container">
+            <a href="/">
+                <img src="/assets/banner.png" alt="BePasted" class="banner-image">
+            </a>
+            <div class="custom-divider"></div>
+        </h1>
+    </header>
+    
+    <main>
+        <div id="editor-container">
+            <div id="tabs-container">
+                <div id="tabs">
+                    <button class="tab active" data-tab="1">
+                        <span class="tab-name" data-tab="1">Tab 1</span>
+                    </button>
+                    <button id="new-tab">+</button>
+                </div>
+            </div>
+            
+            <div id="editor-wrapper">
+                <div class="line-numbers"></div>
+                <textarea id="paste-content" placeholder="Enter your text here..."></textarea>
+            </div>
+            
+            <div id="editor-footer">
+                <div id="word-counter">Words: 0</div>
+            </div>
+        </div>
+
+        <div id="paste-options">
+            <div class="options-grid">
+                <div class="option-card" id="privacy-card">
+                    <div class="option-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L3 7V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>Privacy Settings</h3>
+                    </div>
+                    <div class="option-content">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="is-private">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Private Paste</span>
+                        </label>
+                        <div id="password-section" class="hidden">
+                            <div class="input-group">
+                                <input type="password" id="paste-password" placeholder="Enter password">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-card" id="raw-access-card">
+                    <div class="option-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 13H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>RAW Access</h3>
+                    </div>
+                    <div class="option-content">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="allow-raw">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Allow RAW Access</span>
+                        </label>
+                        <p class="option-note">Only available for public, single-tab pastes</p>
+                        <div class="warning-message">
+                            <div class="warning-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span id="raw-warning-text">Disabled due to configuration</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="option-card" id="expiration-card">
+                    <div class="option-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h3>Set Expiration</h3>
+                    </div>
+                    <div class="option-content">
+                        <div class="expiration-options">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="enable-expiry">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Delete After Time</span>
+                            </label>
+                            <div id="expiry-section" class="hidden">
+                                <div class="input-group">
+                                    <input type="number" id="expiry-value" min="5" placeholder="Amount">
+                                    <select id="expiry-unit">
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label class="toggle-switch mt-3">
+                                <input type="checkbox" id="enable-burn">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Burn After Views</span>
+                            </label>
+                            <div id="burn-section" class="hidden">
+                                <div class="input-group">
+                                    <input type="number" id="burn-count" min="1" max="10000000000" placeholder="Number of views">
+                                </div>
+                            </div>
+                            <div class="expiration-info mt-1">
+                                <small>If both options are enabled, whichever comes first will expire the paste.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="verification-section">
+                <div id="turnstile-container" class="turnstile-widget"></div>
+            </div>
+
+            <button id="submit-paste" class="submit-button">
+                <span class="button-content">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Submit Paste
+                </span>
+            </button>
+        </div>
+
+        <div id="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-text">Submitting... 0%</div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="error-popup-overlay"></div>
+    <div class="error-popup">
+        <div class="error-popup-header">
+            <span class="error-popup-icon">⚠</span>
+            <h3 class="error-popup-title">Error</h3>
+        </div>
+        <div class="error-popup-message"></div>
+        <button class="error-popup-button">OK</button>
+    </div>
+
+    <script src="/js/main.js" type="module"></script>
+
+    <footer class="credits-container">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/credits" class="credits-button">Credits</a>
+                <a href="/privacy-policy" class="credits-button">Privacy</a>
+                <a href="/tos" class="credits-button">Terms</a>
+            </div>
+            <p class="copyright-text">BePasted is a product of <a href="https://respy.tech" target="_blank" rel="noopener noreferrer" class="company-link">Respy.Tech</a>. &copy; 2025 <a href="https://respy.tech" target="_blank" rel="noopener noreferrer" class="company-link">Respy.Tech</a>. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

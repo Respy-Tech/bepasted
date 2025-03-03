@@ -1,0 +1,58 @@
+# IDE and Editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.swp
+*.swo
+.cursorrules
+.windsurfrules
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.npm
+.pnpm-store/
+package-lock.json
+
+# Environment and secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+
+# Build and distribution
+dist/
+build/
+*.tsbuildinfo
+.cache/
+coverage/
+
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# MongoDB
+*.mongodb
+mongod.conf
+mongodb.log
+dump/
+
+# Misc
+.tmp/
+.temp/
+.history/
+*.bak
+*.orig
+*.tar.gz
+*.zip
+*.rar

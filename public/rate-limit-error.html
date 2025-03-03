@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Limit - BePasted</title>
+    <meta name="theme-color" content="#0f5132" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- SIMPLE_ANALYTICS_PLACEHOLDER -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .banner-image {
+            height: 60px;
+            width: auto;
+            margin-bottom: 10px;
+        }
+
+        .custom-divider {
+            height: 4px;
+            width: 80px;
+            margin-top: 5px;
+            background: linear-gradient(90deg, #006655 0%, #d35400 100%);
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ff4444;
+        }
+
+        .error-message {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #cccccc;
+        }
+
+        .timer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 2rem 0;
+            color: #00ff88;
+        }
+
+        .home-button {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            background-color: #00ff88;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .home-button:hover {
+            background-color: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="logo-container">
+            <a href="/">
+                <img src="/assets/banner.png" alt="BePasted" class="banner-image">
+            </a>
+            <div class="custom-divider"></div>
+        </div>
+        <svg class="error-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#ff4444" stroke-width="2"/>
+            <path d="M12 8V12" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="#ff4444"/>
+        </svg>
+        <h1 class="error-title">Paste Creation Rate Limit Exceeded</h1>
+        <p class="error-message">You've reached the maximum number of paste creations allowed (10 per minute). Please wait before creating another paste.</p>
+        <div class="timer" id="countdown">00:00</div>
+        <a href="/" class="home-button">Return to Homepage</a>
+    </div>
+
+    <script>
+        async function checkRateLimit() {
+            try {
+                const response = await fetch('/api/rate-limit-status');
+                
+                // If redirected, go to homepage
+                if (response.redirected) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                // Get the time left
+                const data = await response.json();
+                updateTimer(data.timeLeft);
+            } catch (error) {
+                console.error('Error checking rate limit:', error);
+                // On error, redirect to homepage
+                window.location.href = '/';
+            }
+        }
+
+        function updateTimer(timeLeft) {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('countdown').textContent = formattedTime;
+            
+            if (timeLeft <= 0) {
+                window.location.href = '/';
+                return;
+            }
+            
+            // Check rate limit status every second
+            setTimeout(checkRateLimit, 1000);
+        }
+
+        document.addEventListener('DOMContentLoaded', checkRateLimit);
+    </script>
+</body>
+</html>

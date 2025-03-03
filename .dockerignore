@@ -1,0 +1,21 @@
+node_modules
+npm-debug.log
+.git
+.github
+.gitignore
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.DS_Store
+# Don't ignore important files
+!openapi.json
+!openapi.yaml
+*.md
+!README.md
+.vscode
+.idea
+*.log
+tmp/
+temp/ 

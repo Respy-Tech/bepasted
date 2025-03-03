@@ -1,0 +1,43 @@
+{
+  "name": "bepasted",
+  "version": "2.0.1",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build step required\" && exit 0"
+  },
+  "keywords": [
+    "paste-service",
+    "code-sharing",
+    "text-sharing",
+    "privacy-focused",
+    "no-login",
+    "security",
+    "hono",
+    "mongodb"
+  ],
+  "author": "Respy.Tech <contact@bepasted.com> (https://respy.tech)",
+  "license": "ISC",
+  "description": "A free, no-login paste service prioritizing privacy, simplicity, and security",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rimunace/bepasted"
+  },
+  "homepage": "https://bepasted.com",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "dependencies": {
+    "@arcjet/node": "^1.0.0-beta.2",
+    "@hono/node-server": "^1.3.3",
+    "bcrypt": "^5.1.1",
+    "bepasted": "file:",
+    "dotenv": "^16.3.1",
+    "hono": "^4.7.2",
+    "mongoose": "^8.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}
