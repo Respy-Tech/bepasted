@@ -648,17 +648,18 @@ class PasteEditor {
       return normalized.slice(0, 50);
     };
 
-    // Define functions using const instead of pre-declaring with let
-    const closePopup = () => {
+    // Use function declarations instead of const function expressions
+    // Function declarations are hoisted to the top of their scope
+    function closePopup() {
       popup.classList.remove("show");
       // Remove event listeners and popup after animation
       setTimeout(() => {
         document.removeEventListener("mousedown", handleOutsideClickFunc);
         document.removeEventListener("keydown", handleKeyDownFunc);
       }, 200); // Match transition duration from CSS
-    };
+    }
 
-    const handleSave = () => {
+    function handleSave() {
       const newName = sanitizeTabName(input.value);
       if (newName) {
         // Update the tab name in the DOM
@@ -672,22 +673,21 @@ class PasteEditor {
         }
       }
       closePopup();
-    };
+    }
 
-    // Implement event handlers
-    const handleKeyDownFunc = (e) => {
+    function handleKeyDownFunc(e) {
       if (e.key === "Enter" && document.activeElement === input) {
         handleSave();
       } else if (e.key === "Escape") {
         closePopup();
       }
-    };
+    }
 
-    const handleOutsideClickFunc = (e) => {
+    function handleOutsideClickFunc(e) {
       if (!popup.contains(e.target) && !tabNameElement.contains(e.target)) {
         closePopup();
       }
-    };
+    }
 
     // Add event listeners with the defined handlers
     document.addEventListener("keydown", handleKeyDownFunc);
