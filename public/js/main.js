@@ -666,8 +666,8 @@ class PasteEditor {
         tabNameElement.textContent = newName;
 
         // Update the tab name in our data structure
-        const tabId = tabNameElement.closest(".tab").dataset.id;
-        const tabIndex = this.tabs.findIndex((t) => t.id === tabId);
+        const tabElementId = tabNameElement.closest(".tab").dataset.id;
+        const tabIndex = this.tabs.findIndex((t) => t.id === tabElementId);
         if (tabIndex !== -1) {
           this.tabs[tabIndex].name = newName;
         }

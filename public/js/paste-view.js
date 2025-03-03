@@ -40,7 +40,7 @@ function initializeTabSwitching() {
       .forEach((t) => t.classList.remove("active"));
     document
       .querySelectorAll(".editor-wrapper")
-      .forEach((e) => e.classList.remove("active"));
+      .forEach((editorWrapper) => editorWrapper.classList.remove("active"));
 
     // Add active class to selected tab and editor
     tab.classList.add("active");
