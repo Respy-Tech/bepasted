@@ -90,7 +90,7 @@ class ContentScanner {
     // Special case: Analyze script density
     const sanitizedContent = purify.sanitize(content);
     const scriptTags = (
-      sanitizedContent.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || []
+      sanitizedContent.match(/<script[^>]*>([\s\S]*?)<\/script\s*>/gi) || []
     ).length;
     const scriptDensity = scriptTags / Math.max(1, contentLength / 1000);
 
