@@ -604,8 +604,40 @@ class PasteEditor {
       return normalized.slice(0, 50);
     };
 
-    // Event handlers
-    const handleKeyDown = (e) => {
+    // Pre-declare all functions and handlers that have interdependencies
+    let closePopup;
+    let handleSave;
+    let handleKeyDownFunc;
+    let handleOutsideClickFunc;
+
+    // Define functions
+    closePopup = () => {
+      popup.classList.remove("show");
+      // Remove event listeners and popup after animation
+      setTimeout(() => {
+        document.removeEventListener("mousedown", handleOutsideClickFunc);
+        document.removeEventListener("keydown", handleKeyDownFunc);
+      }, 200); // Match transition duration from CSS
+    };
+
+    handleSave = () => {
+      const newName = sanitizeTabName(input.value);
+      if (newName) {
+        // Update the tab name in the DOM
+        tabNameElement.textContent = newName;
+
+        // Update the tab name in our data structure
+        const tabId = tabNameElement.closest(".tab").dataset.id;
+        const tabIndex = this.tabs.findIndex((t) => t.id === tabId);
+        if (tabIndex !== -1) {
+          this.tabs[tabIndex].name = newName;
+        }
+      }
+      closePopup();
+    };
+
+    // Implement event handlers
+    handleKeyDownFunc = (e) => {
       if (e.key === "Enter" && document.activeElement === input) {
         handleSave();
       } else if (e.key === "Escape") {
@@ -613,41 +645,16 @@ class PasteEditor {
       }
     };
 
-    const handleOutsideClick = (e) => {
+    handleOutsideClickFunc = (e) => {
       if (!popup.contains(e.target) && !tabNameElement.contains(e.target)) {
         closePopup();
       }
     };
 
-    // Helper function to close popup
-    const closePopup = () => {
-      popup.classList.remove("show");
-      // Remove event listeners and popup after animation
-      setTimeout(() => {
-        document.removeEventListener("mousedown", handleOutsideClick);
-        document.removeEventListener("keydown", handleKeyDown);
-      }, 200); // Match transition duration from CSS
-    };
-
-    // Handle save
-    const handleSave = () => {
-      const newName = sanitizeTabName(input.value);
-      if (newName.length >= 1) {
-        currentTab.name = newName;
-        this.tabs.set(tabId, currentTab);
-        this.rebuildTabs();
-        closePopup();
-      } else {
-        input.classList.add("error");
-        setTimeout(() => input.classList.remove("error"), 300);
-      }
-    };
-
-    // Add event listeners
+    // Add event listeners with the defined handlers
+    document.addEventListener("keydown", handleKeyDownFunc);
+    document.addEventListener("mousedown", handleOutsideClickFunc);
     saveBtn.onclick = handleSave;
-    cancelBtn.onclick = closePopup;
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleKeyDown);
   }
 
   rebuildTabs() {
