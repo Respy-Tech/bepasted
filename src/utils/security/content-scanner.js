@@ -1,4 +1,5 @@
 import logger from '../logging/logger.js';
+import DOMPurify from 'dompurify';
 
 /**
  * ContentScanner provides methods to scan paste content for potentially
@@ -82,7 +83,8 @@ class ContentScanner {
     this._checkPatterns(content, 'sensitiveData', results, 1);
     
     // Special case: Analyze script density
-    const scriptTags = (content.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || []).length;
+    const sanitizedContent = DOMPurify.sanitize(content);
+    const scriptTags = (sanitizedContent.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || []).length;
     const scriptDensity = (scriptTags / Math.max(1, contentLength / 1000));
     
     if (scriptDensity > 0.5) {  // More than 0.5 script tags per 1000 chars
