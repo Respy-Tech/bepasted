@@ -244,7 +244,7 @@ class PasteEditor {
 
     // Apply syntax highlighting if available
     if (window.SyntaxHighlighter && this.editor) {
-      const highlighter = new SyntaxHighlighter();
+      const highlighter = new window.SyntaxHighlighter();
       highlighter.highlightElement(this.editor, tab.name);
     }
 
@@ -604,6 +604,21 @@ class PasteEditor {
       return normalized.slice(0, 50);
     };
 
+    // Event handlers
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter" && document.activeElement === input) {
+        handleSave();
+      } else if (e.key === "Escape") {
+        closePopup();
+      }
+    };
+
+    const handleOutsideClick = (e) => {
+      if (!popup.contains(e.target) && !tabNameElement.contains(e.target)) {
+        closePopup();
+      }
+    };
+
     // Helper function to close popup
     const closePopup = () => {
       popup.classList.remove("show");
@@ -628,33 +643,11 @@ class PasteEditor {
       }
     };
 
-    // Event handlers
-    const handleKeyDown = (e) => {
-      if (e.key === "Enter" && document.activeElement === input) {
-        handleSave();
-      } else if (e.key === "Escape") {
-        closePopup();
-      }
-    };
-
-    const handleOutsideClick = (e) => {
-      if (!popup.contains(e.target) && !tabNameElement.contains(e.target)) {
-        closePopup();
-      }
-    };
-
     // Add event listeners
     saveBtn.onclick = handleSave;
     cancelBtn.onclick = closePopup;
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleKeyDown);
-
-    // Handle input validation
-    input.oninput = () => {
-      if (input.classList.contains("error")) {
-        input.classList.remove("error");
-      }
-    };
   }
 
   rebuildTabs() {
@@ -1137,7 +1130,7 @@ class PasteEditor {
 
     // Initialize syntax highlighting if available
     if (window.SyntaxHighlighter) {
-      new SyntaxHighlighter();
+      new window.SyntaxHighlighter();
     }
   }
 
@@ -1154,7 +1147,7 @@ class PasteEditor {
 
     // Apply syntax highlighting if available
     if (window.SyntaxHighlighter && this.editor) {
-      const highlighter = new SyntaxHighlighter();
+      const highlighter = new window.SyntaxHighlighter();
       highlighter.highlightElement(this.editor, name);
     }
 
