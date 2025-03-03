@@ -470,7 +470,7 @@ class PasteEditor {
     const formattedSize = PasteEditor.formatFileSize(trueBytes);
 
     // Calculate UTF-8/ASCII ratio to show encoding efficiency
-    const asciiCount = (text.match(/[\x20-\x7F]/gu) || []).length;
+    const asciiCount = (text.match(/[ -~]/gu) || []).length;
     const nonAsciiCount = charCount - asciiCount;
     const encodingRatio =
       charCount > 0 ? (trueBytes / charCount).toFixed(2) : 0;
