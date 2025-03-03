@@ -108,7 +108,7 @@ export async function safeParseJSON(req, options = {}) {
           path: req.path,
           // Log info about what properties are available for debugging
           hasRaw: !!req.raw,
-          hasContext: !!(req._c || (req.raw && req.raw._c)),
+          hasContext: !!(req._c || (req.raw?._c)),
           requestProperties: Object.keys(req),
           rawRequestProperties: req.raw ? Object.keys(req.raw) : []
         });
@@ -288,37 +288,37 @@ export function getCachedRequestBody(c) {
   }
   
   // If we have a request with context
-  if (c && c.req && c.req._c && typeof c.req._c.get === 'function') {
+  if (c?.req && c.req._c && typeof c.req._c.get === 'function') {
     cachedBody = c.req._c.get('cachedRequestBody');
     if (cachedBody) return cachedBody;
   }
   
   // If we have a raw request with context
-  if (c && c.req && c.req.raw && c.req.raw._c && typeof c.req.raw._c.get === 'function') {
+  if (c?.req && c.req.raw && c.req.raw._c && typeof c.req.raw._c.get === 'function') {
     cachedBody = c.req.raw._c.get('cachedRequestBody');
     if (cachedBody) return cachedBody;
   }
   
   // If we are passed a request directly
-  if (c && c._c && typeof c._c.get === 'function') {
+  if (c?._c && typeof c._c.get === 'function') {
     cachedBody = c._c.get('cachedRequestBody');
     if (cachedBody) return cachedBody;
   }
   
   // If we are passed a raw request
-  if (c && c.raw && c.raw._c && typeof c.raw._c.get === 'function') {
+  if (c?.raw && c.raw._c && typeof c.raw._c.get === 'function') {
     cachedBody = c.raw._c.get('cachedRequestBody');
     if (cachedBody) return cachedBody;
   }
   
   // More fallbacks
-  if (c && c._request && c._request._c && typeof c._request._c.get === 'function') {
+  if (c?._request && c._request._c && typeof c._request._c.get === 'function') {
     cachedBody = c._request._c.get('cachedRequestBody');
     if (cachedBody) return cachedBody;
   }
   
   // Try originalRaw if available
-  if (c && c.req && c.req.originalRaw && c.req.originalRaw._c && typeof c.req.originalRaw._c.get === 'function') {
+  if (c?.req && c.req.originalRaw && c.req.originalRaw._c && typeof c.req.originalRaw._c.get === 'function') {
     cachedBody = c.req.originalRaw._c.get('cachedRequestBody');
     if (cachedBody) return cachedBody;
   }

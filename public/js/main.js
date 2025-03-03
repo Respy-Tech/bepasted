@@ -240,7 +240,7 @@ class PasteEditor {
 
     updateRawAccess() {
         const isMultiTab = this.tabs.size > 1;
-        const isPrivate = this.isPrivateCheckbox && this.isPrivateCheckbox.checked;
+        const isPrivate = this.isPrivateCheckbox?.checked;
         const rawAccessCard = document.getElementById('raw-access-card');
         const warningText = document.getElementById('raw-warning-text');
         
@@ -870,16 +870,16 @@ class PasteEditor {
             };
 
             // Add optional fields if they are enabled
-            if (this.isPrivateCheckbox && this.isPrivateCheckbox.checked) {
+            if (this.isPrivateCheckbox?.checked) {
                 pasteData.isPrivate = true;
                 pasteData.password = document.getElementById('paste-password').value;
             }
 
-            if (this.allowRawCheckbox && this.allowRawCheckbox.checked) {
+            if (this.allowRawCheckbox?.checked) {
                 pasteData.allowRaw = true;
             }
 
-            if (this.enableExpiryCheckbox && this.enableExpiryCheckbox.checked) {
+            if (this.enableExpiryCheckbox?.checked) {
                 const expiryValue = document.getElementById('expiry-value').value;
                 if (!expiryValue || isNaN(parseInt(expiryValue))) {
                     this.loadingOverlay.style.display = 'none';
@@ -893,7 +893,7 @@ class PasteEditor {
                 };
             }
 
-            if (this.enableBurnCheckbox && this.enableBurnCheckbox.checked) {
+            if (this.enableBurnCheckbox?.checked) {
                 const burnCount = document.getElementById('burn-count').value;
                 if (!burnCount || isNaN(parseInt(burnCount))) {
                     this.loadingOverlay.style.display = 'none';
@@ -982,14 +982,14 @@ class PasteEditor {
 
     getOptions() {
         return {
-            isPrivate: this.isPrivateCheckbox && this.isPrivateCheckbox.checked,
-            password: this.isPrivateCheckbox && this.isPrivateCheckbox.checked ? document.getElementById('paste-password').value : undefined,
-            allowRaw: this.allowRawCheckbox && this.allowRawCheckbox.checked,
-            expiry: this.enableExpiryCheckbox && this.enableExpiryCheckbox.checked ? {
+            isPrivate: this.isPrivateCheckbox?.checked,
+            password: this.isPrivateCheckbox?.checked ? document.getElementById('paste-password').value : undefined,
+            allowRaw: this.allowRawCheckbox?.checked,
+            expiry: this.enableExpiryCheckbox?.checked ? {
                 value: parseInt(document.getElementById('expiry-value').value),
                 unit: document.getElementById('expiry-unit').value
             } : undefined,
-            burnCount: this.enableBurnCheckbox && this.enableBurnCheckbox.checked ? parseInt(document.getElementById('burn-count').value) : undefined
+            burnCount: this.enableBurnCheckbox?.checked ? parseInt(document.getElementById('burn-count').value) : undefined
         };
     }
 
