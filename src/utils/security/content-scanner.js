@@ -88,10 +88,8 @@ class ContentScanner {
     this._checkPatterns(content, "sensitiveData", results, 1);
 
     // Special case: Analyze script density
-    const sanitizedContent = purify.sanitize(content);
-    const scriptTags = (
-      sanitizedContent.match(/<script[^>]*>([\s\S]*?)<\/script\s*>/gi) || []
-    ).length;
+    const sanitizedContent = purify.sanitize(content, { RETURN_DOM: true });
+    const scriptTags = sanitizedContent.getElementsByTagName('script').length;
     const scriptDensity = scriptTags / Math.max(1, contentLength / 1000);
 
     if (scriptDensity > 0.5) {
