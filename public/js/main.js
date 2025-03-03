@@ -648,14 +648,8 @@ class PasteEditor {
       return normalized.slice(0, 50);
     };
 
-    // Pre-declare all functions and handlers that have interdependencies
-    let closePopup;
-    let handleSave;
-    let handleKeyDownFunc;
-    let handleOutsideClickFunc;
-
-    // Define functions
-    closePopup = () => {
+    // Define functions using const instead of pre-declaring with let
+    const closePopup = () => {
       popup.classList.remove("show");
       // Remove event listeners and popup after animation
       setTimeout(() => {
@@ -664,7 +658,7 @@ class PasteEditor {
       }, 200); // Match transition duration from CSS
     };
 
-    handleSave = () => {
+    const handleSave = () => {
       const newName = sanitizeTabName(input.value);
       if (newName) {
         // Update the tab name in the DOM
@@ -681,7 +675,7 @@ class PasteEditor {
     };
 
     // Implement event handlers
-    handleKeyDownFunc = (e) => {
+    const handleKeyDownFunc = (e) => {
       if (e.key === "Enter" && document.activeElement === input) {
         handleSave();
       } else if (e.key === "Escape") {
@@ -689,7 +683,7 @@ class PasteEditor {
       }
     };
 
-    handleOutsideClickFunc = (e) => {
+    const handleOutsideClickFunc = (e) => {
       if (!popup.contains(e.target) && !tabNameElement.contains(e.target)) {
         closePopup();
       }
