@@ -1136,9 +1136,13 @@ class PasteEditor {
     this.initializeTabSwitching();
     this.initializeCopyButton();
 
-    // Initialize syntax highlighting if available
-    if (window.SyntaxHighlighter) {
-      new window.SyntaxHighlighter();
+    // Initialize syntax highlighting if available for current editor content
+    if (window.SyntaxHighlighter && this.editor) {
+      const highlighter = new window.SyntaxHighlighter();
+      const currentTab = Array.from(this.tabs.values())[0];
+      if (currentTab) {
+        highlighter.highlightElement(this.editor, currentTab.name);
+      }
     }
   }
 
