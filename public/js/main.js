@@ -648,6 +648,9 @@ class PasteEditor {
       return normalized.slice(0, 50);
     };
 
+    // Store a reference to the PasteEditor instance
+    const self = this;
+
     // Use function declarations instead of const function expressions
     // Function declarations are hoisted to the top of their scope
     function closePopup() {
@@ -665,12 +668,8 @@ class PasteEditor {
         // Update the tab name in the DOM
         tabNameElement.textContent = newName;
 
-        // Update the tab name in our data structure
-        const tabElementId = tabNameElement.closest(".tab").dataset.id;
-        const tabIndex = this.tabs.findIndex((t) => t.id === tabElementId);
-        if (tabIndex !== -1) {
-          this.tabs[tabIndex].name = newName;
-        }
+        // Update the tab name in our data structure - using the correct tabId
+        self.tabs.get(tabId).name = newName;
       }
       closePopup();
     }
