@@ -1461,7 +1461,7 @@ async function archivePaste(paste) {
 
         // Only include expiry if it exists and has all required fields
         const expiry = paste.expiry;
-        if (expiry && expiry.value && expiry.unit && expiry.expiresAt) {
+        if (expiry?.value && expiry.unit && expiry.expiresAt) {
             archiveData.expiry = {
                 value: expiry.value,
                 unit: expiry.unit,
